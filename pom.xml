@@ -6,62 +6,66 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.7.18</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>com.nttdata</groupId>
-	<artifactId>customersService</artifactId>
+	<artifactId>customers-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>customersService</name>
+	<name>customers-service</name>
 	<description>NTT Data Customers Microservice</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+
 	<properties>
 		<java.version>11</java.version>
+		<lombok.version>1.18.32</lombok.version>
+		<springdoc.version>1.7.0</springdoc.version>
+		<openapi.generator.version>5.1.0</openapi.generator.version>
 	</properties>
 	<dependencies>
+
+		<!-- MongoDB reactivo -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+			<artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
 		</dependency>
+		<!-- WebFlux -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
-
+		<!-- Bean Validation para @Valid -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
 
+		<!-- Swagger UI para WebFlux con OpenAPI 3 -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-webflux-ui</artifactId>
-			<version>1.8.0</version>
+			<version>${springdoc.version}</version>
 		</dependency>
 
+		<!-- Soporte para openapitools -->
 		<dependency>
 			<groupId>org.openapitools</groupId>
 			<artifactId>jackson-databind-nullable</artifactId>
-			<version>0.2.1</version>
+			<version>0.2.6</version>
 		</dependency>
-
+		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
@@ -71,6 +75,7 @@
 
 	<build>
 		<plugins>
+			<!-- Annotation processors -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -83,6 +88,7 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+			<!-- Spring boot -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -95,11 +101,11 @@
 					</excludes>
 				</configuration>
 			</plugin>
-
+			<!-- Generación de código desde openapi.yml -->
 			<plugin>
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
-				<version>5.1.0</version>
+				<version>${openapi.generator.version}</version>
 				<executions>
 					<execution>
 						<goals>
@@ -120,5 +126,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
