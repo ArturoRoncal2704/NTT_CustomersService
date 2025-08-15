@@ -1,54 +1,80 @@
-openapi: "3.0.1"
+openapi: 3.0.1
 info:
   title: Customer Service API
-  description: API para gestionar clientes.
+  description: Reactive API to manage customers.
   version: 1.0.0
 servers:
   - url: http://localhost:8080
-    description: Servidor local
+    description: Local server
+tags:
+  - name: Customers
+    description: Customer operations
 paths:
   /api/customers:
-    post:
-      summary: Crear un nuevo cliente
-      operationId: registerCustomer
-      requestBody:
-        description: Detalles del nuevo cliente
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CustomerRequest"
-      responses:
-        '201':
-          description: Cliente creado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CustomerResponse"
     get:
-      summary: Listar todos los clientes
+      tags: [Customers]
+      summary: List all customers
       operationId: listCustomers
       parameters:
         - name: type
           in: query
           required: false
-          description: Filtrar por tipo de cliente
+          description: Filter by customer type
           schema:
             type: string
             enum: [PERSON, BUSINESS]
       responses:
         '200':
-          description: Lista de clientes
+          description: List of customers
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/CustomerResponse"
+        '500':
+          description: Internal server error
+    post:
+      tags: [Customers]
+      summary: Create a new customer
+      operationId: createCustomer
+      requestBody:
+        description: New customer details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerRequest"
+            examples:
+              sample:
+                value:
+                  firstName: John
+                  lastName: Doe
+                  email: john.doe@example.com
+                  documentNumber: "12345678"
+                  type: PERSON
+                  phone: "+1-555-1234"
+                  address:
+                    line1: "742 Evergreen Terrace"
+                    city: Springfield
+                    country: USA
+                  active: true
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerResponse"
+        '400':
+          description: Invalid request data
+        '500':
+          description: Internal server error
 
   /api/customers/{id}:
     get:
-      summary: Obtener cliente por ID
+      tags: [Customers]
+      summary: Get customer by ID
       operationId: getCustomerById
       parameters:
         - name: id
@@ -58,15 +84,16 @@ paths:
             type: string
       responses:
         '200':
-          description: Datos del cliente
+          description: Customer found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/CustomerResponse"
         '404':
-          description: Cliente no encontrado
+          description: Customer not found
     put:
-      summary: Actualizar cliente existente
+      tags: [Customers]
+      summary: Update an existing customer
       operationId: updateCustomer
       parameters:
         - name: id
@@ -75,7 +102,7 @@ paths:
           schema:
             type: string
       requestBody:
-        description: Datos actualizados del cliente
+        description: Updated customer details
         required: true
         content:
           application/json:
@@ -83,15 +110,16 @@ paths:
               $ref: "#/components/schemas/CustomerRequest"
       responses:
         '200':
-          description: Cliente actualizado exitosamente
+          description: Customer updated successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/CustomerResponse"
         '404':
-          description: Cliente no encontrado
+          description: Customer not found
     delete:
-      summary: Eliminar cliente
+      tags: [Customers]
+      summary: Delete a customer
       operationId: deleteCustomer
       parameters:
         - name: id
@@ -101,58 +129,51 @@ paths:
             type: string
       responses:
         '204':
-          description: Cliente eliminado exitosamente
+          description: Customer deleted successfully
         '404':
-          description: Cliente no encontrado
+          description: Customer not found
 
 components:
   schemas:
     CustomerRequest:
       type: object
       properties:
-        id:
-          type: string
-          description: ID único del cliente
         firstName:
           type: string
-          description: Nombres del cliente
+          description: Customer's first name
         lastName:
           type: string
-          description: Apellidos del cliente
+          description: Customer's last name
         email:
           type: string
           format: email
-          description: Correo electrónico
+          description: Customer's email address
         documentNumber:
           type: string
-          description: Documento del cliente (DNI/RUC)
+          description: Customer's document number (ID, passport, etc.)
         type:
           type: string
-          description: Tipo de cliente (PERSON, BUSINESS)
+          description: Customer type
           enum: [PERSON, BUSINESS]
         phone:
           type: string
-          description: Teléfono de contacto
+          description: Customer's phone number
         address:
           type: object
-          description: Dirección del cliente
+          description: Customer's address
           properties:
             line1:
               type: string
-              description: Dirección línea 1
+              description: Address line 1
             city:
               type: string
-              description: Ciudad
+              description: City
             country:
               type: string
-              description: País
+              description: Country
         active:
           type: boolean
-          description: Estado del cliente (true = activo, false = inactivo)
-        createdAt:
-          type: string
-          format: date-time
-          description: Fecha de creación del registro
+          description: Whether the customer is active
       required:
         - firstName
         - lastName
@@ -160,48 +181,14 @@ components:
         - type
 
     CustomerResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          description: ID único del cliente
-        firstName:
-          type: string
-          description: Nombres del cliente
-        lastName:
-          type: string
-          description: Apellidos del cliente
-        email:
-          type: string
-          format: email
-          description: Correo electrónico
-        documentNumber:
-          type: string
-          description: Documento del cliente (DNI/RUC)
-        type:
-          type: string
-          description: Tipo de cliente (PERSON, BUSINESS)
-          enum: [PERSON, BUSINESS]
-        phone:
-          type: string
-          description: Teléfono de contacto
-        address:
-          type: object
-          description: Dirección del cliente
+      allOf:
+        - $ref: "#/components/schemas/CustomerRequest"
+        - type: object
           properties:
-            line1:
+            id:
               type: string
-              description: Dirección línea 1
-            city:
+              description: Unique customer ID
+            createdAt:
               type: string
-              description: Ciudad
-            country:
-              type: string
-              description: País
-        active:
-          type: boolean
-          description: Estado del cliente (true = activo, false = inactivo)
-        createdAt:
-          type: string
-          format: date-time
-          description: Fecha de creación del registro
+              format: date-time
+              description: Creation date
