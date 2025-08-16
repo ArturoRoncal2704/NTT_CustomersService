@@ -4,7 +4,7 @@ info:
   description: Reactive API to manage customers.
   version: 1.0.0
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8585
     description: Local server
 tags:
   - name: Customers
@@ -12,7 +12,8 @@ tags:
 paths:
   /api/customers:
     get:
-      tags: [Customers]
+      tags:
+        - Customers
       summary: List all customers
       operationId: listCustomers
       parameters:
@@ -31,11 +32,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/CustomerResponse"
+                  $ref: '#/components/schemas/CustomerResponse'
         '500':
           description: Internal server error
     post:
-      tags: [Customers]
+      tags:
+        - Customers
       summary: Create a new customer
       operationId: createCustomer
       requestBody:
@@ -44,20 +46,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CustomerRequest"
+              $ref: '#/components/schemas/CustomerRequest'
             examples:
               sample:
                 value:
-                  firstName: John
-                  lastName: Doe
-                  email: john.doe@example.com
-                  documentNumber: "12345678"
+                  firstName: Juan
+                  lastName: Pérez
+                  email: juan.perez@example.pe
+                  documentNumber: "45879632"
                   type: PERSON
-                  phone: "+1-555-1234"
+                  phone: "+51 987 654 321"
                   address:
-                    line1: "742 Evergreen Terrace"
-                    city: Springfield
-                    country: USA
+                    line1: "Av. Arequipa 1234"
+                    city: Lima
+                    country: Peru
                   active: true
       responses:
         '201':
@@ -65,7 +67,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CustomerResponse"
+                $ref: '#/components/schemas/CustomerResponse'
         '400':
           description: Invalid request data
         '500':
@@ -73,13 +75,15 @@ paths:
 
   /api/customers/{id}:
     get:
-      tags: [Customers]
+      tags:
+        - Customers
       summary: Get customer by ID
       operationId: getCustomerById
       parameters:
         - name: id
           in: path
           required: true
+          description: Unique identifier of the customer
           schema:
             type: string
       responses:
@@ -88,17 +92,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CustomerResponse"
+                $ref: '#/components/schemas/CustomerResponse'
         '404':
           description: Customer not found
     put:
-      tags: [Customers]
+      tags:
+        - Customers
       summary: Update an existing customer
       operationId: updateCustomer
       parameters:
         - name: id
           in: path
           required: true
+          description: Unique identifier of the customer
           schema:
             type: string
       requestBody:
@@ -107,24 +113,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CustomerRequest"
+              $ref: '#/components/schemas/CustomerRequest'
       responses:
         '200':
           description: Customer updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CustomerResponse"
+                $ref: '#/components/schemas/CustomerResponse'
         '404':
           description: Customer not found
     delete:
-      tags: [Customers]
+      tags:
+        - Customers
       summary: Delete a customer
       operationId: deleteCustomer
       parameters:
         - name: id
           in: path
           required: true
+          description: Unique identifier of the customer
           schema:
             type: string
       responses:
@@ -150,7 +158,7 @@ components:
           description: Customer's email address
         documentNumber:
           type: string
-          description: Customer's document number (ID, passport, etc.)
+          description: Customer's document number (DNI, passport, etc.)
         type:
           type: string
           description: Customer type
@@ -182,7 +190,7 @@ components:
 
     CustomerResponse:
       allOf:
-        - $ref: "#/components/schemas/CustomerRequest"
+        - $ref: '#/components/schemas/CustomerRequest'
         - type: object
           properties:
             id:
