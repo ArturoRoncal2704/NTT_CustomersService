@@ -10,7 +10,7 @@ tags:
   - name: Customers
     description: Customer operations
 paths:
-  /api/customers:
+  /api/v1/customers:
     get:
       tags:
         - Customers
