@@ -1,0 +1,30 @@
+[
+  {
+    "firstName": "Juan",
+    "lastName": "Pérez",
+    "email": "juan.perez@example.com",
+    "documentNumber": "45879632",
+    "type": "PERSON",
+    "phone": "999888777",
+    "address": {
+      "line1": "Av. Siempre Viva 123",
+      "city": "Lima",
+      "country": "Perú"
+    },
+    "active": true
+  },
+  {
+    "firstName": "Empresa SAC",
+    "lastName": "",
+    "email": "contacto@empresa.com",
+    "documentNumber": "20123456789",
+    "type": "BUSINESS",
+    "phone": "015555555",
+    "address": {
+      "line1": "Av. Industrial 456",
+      "city": "Lima",
+      "country": "Perú"
+    },
+    "active": true
+  }
+]
