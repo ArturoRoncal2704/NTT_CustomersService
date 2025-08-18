@@ -32,14 +32,18 @@ En esta entrega se cumple con los siguientes requerimientos obligatorios del pro
 
 ---
 
-## Diagramas UML
+## Diagramas UML 
 
 ### Diagrama UML arquitectura
 Muestra la interacción entre Clientes, Transacciones, Cuentas y Créditos.
 
-![Diagrama de Arquitectura](docs/arquitectura.png)
+<p align="center">
+  <img src="docs/arquitectura.png" alt="Diagrama de Arquitectura" width="600"/>
+</p>
 
-###  Diagrama de Secuencia CRUD Clientes
-Muestra el flujo de llamadas entre las capas (controller, service, repository, DB) para las operaciones CRUD.
+### Diagrama de Secuencia CRUD Clientes
+Muestra el flujo de llamadas entre las capas (controller, service, repository, DB) para las operaciones CRUD. 
 
-![Diagrama de Secuencia CRUD](docs/crud-clientes.png)
+<p align="center">
+  <img src="docs/crud-clientes.png" alt="Diagrama de Secuencia CRUD" width="800"/>
+</p>
