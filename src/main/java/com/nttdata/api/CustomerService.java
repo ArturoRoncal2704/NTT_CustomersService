@@ -6,62 +6,114 @@ import com.nttdata.model.CustomerRequestAddress;
 import com.nttdata.model.CustomerRequest;
 import com.nttdata.model.CustomerResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
 
     private final CustomerRepository repo;
 
+    // Crear cliente
     public Mono<CustomerResponse> create(CustomerRequest r) {
+        log.info("Creando cliente con documento {}", r.getDocumentNumber());
+
         return repo.existsByDocumentNumberAndActiveIsTrue(r.getDocumentNumber())
-                .flatMap(exists -> exists
-                        ? Mono.error(new IllegalStateException("Document already exists"))
-                        : repo.save(toEntity(r)).map(this::toResponse));
-    }
-
-    public Flux<CustomerResponse> findAll(CustomerRequest.TypeEnum type) {
-        return (type == null ? repo.findAll() : repo.findByType(type))
-                .map(this::toResponse);
-    }
-
-    public Mono<CustomerResponse> findById(String id) {
-        return repo.findById(id)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found")))
-                .map(this::toResponse);
-    }
-
-    public Mono<CustomerResponse> update(String id, CustomerRequest r) {
-        return repo.findById(id)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found")))
-                .flatMap(db -> {
-                    if (r.getFirstName() != null) db.setFirstName(r.getFirstName());
-                    if (r.getLastName() != null) db.setLastName(r.getLastName());
-                    if (r.getEmail() != null) db.setEmail(r.getEmail());
-                    if (r.getDocumentNumber() != null) db.setDocumentNumber(r.getDocumentNumber());
-                    if (r.getType() != null) db.setType(r.getType());
-                    if (r.getPhone() != null) db.setPhone(r.getPhone());
-                    if (r.getAddress() != null) {
-                        if (r.getAddress().getLine1() != null) db.setAddressLine1(r.getAddress().getLine1());
-                        if (r.getAddress().getCity() != null) db.setCity(r.getAddress().getCity());
-                        if (r.getAddress().getCountry() != null) db.setCountry(r.getAddress().getCountry());
+                .flatMap(exists -> {
+                    if (exists) {
+                        log.warn("El documento {} ya existe en la base de datos", r.getDocumentNumber());
+                        return Mono.error(new IllegalStateException("El documento ya existe"));
                     }
-                    if (r.getActive() != null) db.setActive(r.getActive());
-                    return repo.save(db);
+                    return repo.save(toEntity(r))
+                            .doOnSuccess(c -> log.info("Cliente {} creado con ID {}", c.getFirstName(), c.getId()))
+                            .map(this::toResponse);
                 })
-                .map(this::toResponse);
+                .doOnError(e -> log.error("Error al crear cliente: {}", e.getMessage()));
     }
 
+    // Listar clientes con filtro opcional y ejemplo de stream
+    public Flux<CustomerResponse> findAll(CustomerRequest.TypeEnum type) {
+        log.info("Listando clientes. Filtro por tipo: {}", type != null ? type : "todos");
+
+        return (type == null ? repo.findAll() : repo.findByType(type))
+                .map(this::toResponse)
+                .collectList()
+                .flatMapMany(list -> {
+                    // Uso de Streams (Java 8) para filtrar clientes activos
+                    var activos = list.stream()
+                            .filter(CustomerResponse::getActive)
+                            .collect(Collectors.toList());
+
+                    log.debug("Se encontraron {} clientes activos", activos.size());
+                    return Flux.fromIterable(activos);
+                })
+                .doOnError(e -> log.error("Error al listar clientes: {}", e.getMessage()));
+    }
+
+    // Buscar cliente por ID
+    public Mono<CustomerResponse> findById(String id) {
+        log.info("Buscando cliente con ID {}", id);
+
+        return repo.findById(id)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Cliente no encontrado")))
+                .map(this::toResponse)
+                .doOnSuccess(c -> log.info("Cliente {} recuperado correctamente", id))
+                .doOnError(e -> log.error("Error al buscar cliente {}", id, e));
+    }
+
+    // Actualizar cliente (refactor con Optionals y lambdas)
+    public Mono<CustomerResponse> update(String id, CustomerRequest r) {
+        log.info("Actualizando cliente con ID {}", id);
+
+        return repo.findById(id)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Cliente no encontrado")))
+                .flatMap(db -> {
+                    Optional.ofNullable(r.getFirstName()).ifPresent(db::setFirstName);
+                    Optional.ofNullable(r.getLastName()).ifPresent(db::setLastName);
+                    Optional.ofNullable(r.getEmail()).ifPresent(db::setEmail);
+                    Optional.ofNullable(r.getDocumentNumber()).ifPresent(db::setDocumentNumber);
+                    Optional.ofNullable(r.getType()).ifPresent(db::setType);
+                    Optional.ofNullable(r.getPhone()).ifPresent(db::setPhone);
+
+                    if (r.getAddress() != null) {
+                        Optional.ofNullable(r.getAddress().getLine1()).ifPresent(db::setAddressLine1);
+                        Optional.ofNullable(r.getAddress().getCity()).ifPresent(db::setCity);
+                        Optional.ofNullable(r.getAddress().getCountry()).ifPresent(db::setCountry);
+                    }
+
+                    Optional.ofNullable(r.getActive()).ifPresent(db::setActive);
+
+                    return repo.save(db)
+                            .doOnSuccess(c -> log.info("Cliente {} actualizado correctamente", c.getId()));
+                })
+                .map(this::toResponse)
+                .doOnError(e -> log.error("Error al actualizar cliente {}", id, e));
+    }
+
+    // Eliminar cliente
     public Mono<Void> delete(String id) {
+        log.info("Eliminando cliente con ID {}", id);
+
         return repo.existsById(id)
-                .flatMap(exists -> exists
-                        ? repo.deleteById(id)
-                        : Mono.error(new IllegalArgumentException("Customer not found")));
+                .flatMap(exists -> {
+                    if (!exists) {
+                        log.warn("Intento de eliminar cliente no existente con ID {}", id);
+                        return Mono.error(new IllegalArgumentException("Cliente no encontrado"));
+                    }
+                    return repo.deleteById(id)
+                            .doOnSuccess(v -> log.info("Cliente {} eliminado correctamente", id));
+                })
+                .doOnError(e -> log.error("Error al eliminar cliente {}", id, e));
     }
 
+    // Conversión DTO -> Entity
     private Customer toEntity(CustomerRequest r) {
         Customer c = new Customer();
         c.setFirstName(r.getFirstName());
@@ -79,6 +131,7 @@ public class CustomerService {
         return c;
     }
 
+    // Conversión Entity -> DTO
     private CustomerResponse toResponse(Customer c) {
         CustomerResponse resp = new CustomerResponse();
         resp.setId(c.getId());
@@ -98,5 +151,4 @@ public class CustomerService {
         resp.setActive(c.getActive());
         return resp;
     }
-
 }
