@@ -1,6 +1,6 @@
-package com.nttdata.customers.repository;
+package com.nttdata.repository;
 
-import com.nttdata.customers.domain.Customer;
+import com.nttdata.domain.Customer;
 import com.nttdata.model.CustomerRequest;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import reactor.core.publisher.Flux;

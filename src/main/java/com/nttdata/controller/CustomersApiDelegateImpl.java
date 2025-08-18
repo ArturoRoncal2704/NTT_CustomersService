@@ -1,7 +1,8 @@
-package com.nttdata.api;
+package com.nttdata.controller;
 
 import com.nttdata.model.CustomerRequest;
 import com.nttdata.model.CustomerResponse;
+import com.nttdata.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

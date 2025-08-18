@@ -1,4 +1,4 @@
-package com.nttdata.customers.domain;
+package com.nttdata.domain;
 
 import com.nttdata.model.CustomerRequest;
 import lombok.Data;
