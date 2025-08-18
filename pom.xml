@@ -142,7 +142,7 @@
 						<configuration>
 							<inputSpec>${project.basedir}/src/main/resources/openapi.yml</inputSpec>
 							<generatorName>spring</generatorName>
-							<apiPackage>com.nttdata.api</apiPackage>
+							<apiPackage>com.nttdata.controller</apiPackage>
 							<modelPackage>com.nttdata.model</modelPackage>
 							<supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
 							<configOptions>

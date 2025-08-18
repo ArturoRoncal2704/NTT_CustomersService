@@ -1,10 +1,11 @@
-package com.nttdata.api;
+package com.nttdata.service.impl;
 
-import com.nttdata.customers.domain.Customer;
-import com.nttdata.customers.repository.CustomerRepository;
-import com.nttdata.model.CustomerRequestAddress;
+import com.nttdata.domain.Customer;
+import com.nttdata.repository.CustomerRepository;
 import com.nttdata.model.CustomerRequest;
+import com.nttdata.model.CustomerRequestAddress;
 import com.nttdata.model.CustomerResponse;
+import com.nttdata.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,11 +18,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CustomerService {
+public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository repo;
 
-    // Crear cliente
+    @Override
     public Mono<CustomerResponse> create(CustomerRequest r) {
         log.info("Creando cliente con documento {}", r.getDocumentNumber());
 
@@ -38,7 +39,7 @@ public class CustomerService {
                 .doOnError(e -> log.error("Error al crear cliente: {}", e.getMessage()));
     }
 
-    // Listar clientes con filtro opcional y ejemplo de stream
+    @Override
     public Flux<CustomerResponse> findAll(CustomerRequest.TypeEnum type) {
         log.info("Listando clientes. Filtro por tipo: {}", type != null ? type : "todos");
 
@@ -46,7 +47,6 @@ public class CustomerService {
                 .map(this::toResponse)
                 .collectList()
                 .flatMapMany(list -> {
-                    // Uso de Streams (Java 8) para filtrar clientes activos
                     var activos = list.stream()
                             .filter(CustomerResponse::getActive)
                             .collect(Collectors.toList());
@@ -57,7 +57,7 @@ public class CustomerService {
                 .doOnError(e -> log.error("Error al listar clientes: {}", e.getMessage()));
     }
 
-    // Buscar cliente por ID
+    @Override
     public Mono<CustomerResponse> findById(String id) {
         log.info("Buscando cliente con ID {}", id);
 
@@ -68,7 +68,7 @@ public class CustomerService {
                 .doOnError(e -> log.error("Error al buscar cliente {}", id, e));
     }
 
-    // Actualizar cliente (refactor con Optionals y lambdas)
+    @Override
     public Mono<CustomerResponse> update(String id, CustomerRequest r) {
         log.info("Actualizando cliente con ID {}", id);
 
@@ -97,7 +97,7 @@ public class CustomerService {
                 .doOnError(e -> log.error("Error al actualizar cliente {}", id, e));
     }
 
-    // Eliminar cliente
+    @Override
     public Mono<Void> delete(String id) {
         log.info("Eliminando cliente con ID {}", id);
 
@@ -113,7 +113,7 @@ public class CustomerService {
                 .doOnError(e -> log.error("Error al eliminar cliente {}", id, e));
     }
 
-    // Conversión DTO -> Entity
+
     private Customer toEntity(CustomerRequest r) {
         Customer c = new Customer();
         c.setFirstName(r.getFirstName());
@@ -131,7 +131,6 @@ public class CustomerService {
         return c;
     }
 
-    // Conversión Entity -> DTO
     private CustomerResponse toResponse(Customer c) {
         CustomerResponse resp = new CustomerResponse();
         resp.setId(c.getId());
