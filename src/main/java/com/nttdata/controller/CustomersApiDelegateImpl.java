@@ -1,10 +1,15 @@
 package com.nttdata.controller;
 
+import com.nttdata.mapper.CustomerMapper;
+import com.nttdata.model.CustomerCreateRequest;
 import com.nttdata.model.CustomerRequest;
 import com.nttdata.model.CustomerResponse;
+import com.nttdata.model.CustomerSegment;
+import com.nttdata.model.CustomerType;
 import com.nttdata.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
@@ -19,56 +24,58 @@ public class CustomersApiDelegateImpl implements CustomersApiDelegate {
     private final CustomerService service;
 
     @Override
-    public Mono<ResponseEntity<Flux<CustomerResponse>>> listCustomers(String type, ServerWebExchange exchange) {
-        log.info("Listando clientes. Filtro por tipo: {}", type != null ? type : "todos");
-        CustomerRequest.TypeEnum typeEnum = null;
-        if (type != null) {
-            typeEnum = CustomerRequest.TypeEnum.fromValue(type);
-        }
-        return Mono.just(ResponseEntity.ok(service.findAll(typeEnum)))
-                .doOnSuccess(r -> log.debug("Clientes listados correctamente"))
-                .doOnError(e -> log.error("Error al listar clientes", e));
+    public Mono<ResponseEntity<Flux<CustomerResponse>>> listCustomers(
+            CustomerType type,
+            CustomerSegment segment,
+            ServerWebExchange exchange) {
+
+        Flux<CustomerResponse> body = service.findAll(type, segment)
+                .map(CustomerMapper::toResponse);
+
+        return Mono.just(ResponseEntity.ok(body));
     }
 
     @Override
-    public Mono<ResponseEntity<CustomerResponse>> createCustomer(Mono<CustomerRequest> request,
-                                                                 ServerWebExchange exchange) {
-        log.info("Creando un nuevo cliente...");
+    public Mono<ResponseEntity<CustomerResponse>> createCustomer(
+            Mono<CustomerCreateRequest> request,
+            ServerWebExchange exchange) {
+
         return request
+                .map(CustomerMapper::toEntity)
                 .flatMap(service::create)
-                .map(ResponseEntity::ok)
-                .doOnSuccess(r -> log.info("Cliente creado con ID: {}", r.getBody().getId()))
-                .doOnError(e -> log.error("Error al crear cliente", e));
+                .map(CustomerMapper::toResponse)
+                .map(resp -> ResponseEntity.status(HttpStatus.CREATED).body(resp));
     }
 
     @Override
-    public Mono<ResponseEntity<CustomerResponse>> getCustomerById(String id, ServerWebExchange exchange) {
-        log.info("Consultando cliente con ID: {}", id);
+    public Mono<ResponseEntity<CustomerResponse>> getCustomerById(
+            String id,
+            ServerWebExchange exchange) {
+
         return service.findById(id)
-                .map(ResponseEntity::ok)
-                .doOnSuccess(r -> log.debug("Cliente {} recuperado correctamente", id))
-                .doOnError(e -> log.error("Error al consultar cliente {}", id, e));
+                .map(CustomerMapper::toResponse)
+                .map(ResponseEntity::ok);
     }
 
     @Override
-    public Mono<ResponseEntity<CustomerResponse>> updateCustomer(String id,
-                                                                 Mono<CustomerRequest> request,
-                                                                 ServerWebExchange exchange) {
-        log.info("Actualizando cliente con ID: {}", id);
+    public Mono<ResponseEntity<CustomerResponse>> updateCustomer(
+            String id,
+            Mono<CustomerRequest> request,
+            ServerWebExchange exchange) {
+
         return request
-                .flatMap(r -> service.update(id, r))
-                .map(ResponseEntity::ok)
-                .doOnSuccess(r -> log.info("Cliente {} actualizado correctamente", id))
-                .doOnError(e -> log.error("Error al actualizar cliente {}", id, e));
+                .map(CustomerMapper::toEntity)
+                .flatMap(c -> service.update(id, c))
+                .map(CustomerMapper::toResponse)
+                .map(ResponseEntity::ok);
     }
 
     @Override
-    public Mono<ResponseEntity<Void>> deleteCustomer(String id, ServerWebExchange exchange) {
-        log.info("Eliminando cliente con ID: {}", id);
+    public Mono<ResponseEntity<Void>> deleteCustomer(
+            String id,
+            ServerWebExchange exchange) {
 
         return service.delete(id)
-                .then(Mono.fromSupplier(() -> ResponseEntity.noContent().<Void>build()))
-                .doOnSuccess(r -> log.info("Cliente {} eliminado correctamente", id))
-                .doOnError(e -> log.error("Error al eliminar cliente {}", id, e));
+                .thenReturn(ResponseEntity.noContent().<Void>build());
     }
 }
