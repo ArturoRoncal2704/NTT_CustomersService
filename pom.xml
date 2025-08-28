@@ -157,7 +157,7 @@
 					</execution>
 				</executions>
 			</plugin>
-
+<!--			CheckStyle-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -187,7 +187,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- SPOTTLES -->
+			<!-- SPOTTES -->
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>
 				<artifactId>spotless-maven-plugin</artifactId>
@@ -209,8 +209,69 @@
 					</java>
 				</configuration>
 			</plugin>
-
-
+			<!-- JaCoCo: code coverage -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.11</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<propertyName>argLine</propertyName>
+							<destFile>${project.build.directory}/jacoco.exec</destFile>
+							<append>true</append>
+						</configuration>
+					</execution>
+					<!-- Genera el reporte HTML y XML-->
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+							<excludes>
+								<exclude>**/*Application*</exclude>
+								<exclude>**/config/**</exclude>
+								<exclude>**/dto/**</exclude>
+								<exclude>**/model/**</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+					<!--Falla el build si no se cumplen mínimos -->
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>INSTRUCTION</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.70</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.60</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>
