@@ -1,19 +1,22 @@
 package com.nttdata.service;
 
-import com.nttdata.model.CustomerRequest;
-import com.nttdata.model.CustomerResponse;
+import com.nttdata.domain.Customer;
+import com.nttdata.model.CustomerSegment;
+import com.nttdata.model.CustomerType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface CustomerService {
 
-    Mono<CustomerResponse> create(CustomerRequest r);
+  Mono<Customer> create(Customer c);
 
-    Flux<CustomerResponse> findAll(CustomerRequest.TypeEnum type);
+  Flux<Customer> findAll(CustomerType type, CustomerSegment segment);
 
-    Mono<CustomerResponse> findById(String id);
+  Mono<Customer> findById(String id);
 
-    Mono<CustomerResponse> update(String id, CustomerRequest r);
+  Mono<Customer> update(String id, Customer c);
 
-    Mono<Void> delete(String id);
+  Mono<Void> delete(String id);
+
+  Mono<Customer> findActiveByDocumentNumber(String documentNumber);
 }
