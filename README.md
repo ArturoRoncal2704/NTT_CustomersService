@@ -7,7 +7,6 @@ Este repositorio corresponde al **Avance 2 del proyecto**, donde se amplía el m
 
 ## Alcance del Avance 2
 
-En esta entrega se agregan y consolidan los siguientes requerimientos:
 
 - ✅ CRUD completo de clientes (Create, Read, Update, Delete) con validaciones de negocio:
   - `documentNumber` obligatorio y único por cliente activo
