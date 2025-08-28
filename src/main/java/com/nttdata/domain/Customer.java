@@ -2,6 +2,7 @@ package com.nttdata.domain;
 
 import com.nttdata.model.CustomerSegment;
 import com.nttdata.model.CustomerType;
+import java.time.Instant;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -9,21 +10,17 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
-
 @Data
 @Document(collection = "customers")
 public class Customer {
 
-  @Id
-  private String id;
+  @Id private String id;
 
   private String firstName;
   private String lastName;
   private String email;
 
-  @Indexed
-  private String documentNumber;
+  @Indexed private String documentNumber;
 
   private CustomerType type;
   private CustomerSegment segment;
@@ -35,9 +32,7 @@ public class Customer {
 
   private Boolean active;
 
-  @CreatedDate
-  private Instant createdAt;
+  @CreatedDate private Instant createdAt;
 
-  @LastModifiedDate
-  private Instant updatedAt;
+  @LastModifiedDate private Instant updatedAt;
 }

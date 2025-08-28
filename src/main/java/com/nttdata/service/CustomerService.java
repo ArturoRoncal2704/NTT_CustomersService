@@ -8,10 +8,15 @@ import reactor.core.publisher.Mono;
 
 public interface CustomerService {
 
-    Mono<Customer> create(Customer c);
-    Flux<Customer> findAll(CustomerType type, CustomerSegment segment);
-    Mono<Customer> findById(String id);
-    Mono<Customer> update(String id, Customer c);
-    Mono<Void> delete(String id);
-    Mono<Customer> findActiveByDocumentNumber(String documentNumber);
+  Mono<Customer> create(Customer c);
+
+  Flux<Customer> findAll(CustomerType type, CustomerSegment segment);
+
+  Mono<Customer> findById(String id);
+
+  Mono<Customer> update(String id, Customer c);
+
+  Mono<Void> delete(String id);
+
+  Mono<Customer> findActiveByDocumentNumber(String documentNumber);
 }

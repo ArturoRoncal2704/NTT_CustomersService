@@ -18,9 +18,10 @@ public class JacksonConfig {
 
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
-    return builder -> builder
-        .modulesToInstall(JsonNullableModule.class)
-        .serializationInclusion(JsonInclude.Include.NON_NULL)
-        .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    return builder ->
+        builder
+            .modulesToInstall(JsonNullableModule.class)
+            .serializationInclusion(JsonInclude.Include.NON_NULL)
+            .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
 }
