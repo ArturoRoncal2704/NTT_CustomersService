@@ -70,7 +70,7 @@ public class ApiExceptionHandler {
             .body(problem(422,"Unprocessable Entity", ex.getMessage(), exg.getRequest().getPath().value())));
   }
 
-  // 500 - fallback (última red)
+  // 500 - fallback
   @ExceptionHandler({ Exception.class, Throwable.class })
   public Mono<ResponseEntity<Map<String, Object>>> handleAny(Throwable ex, ServerWebExchange exg) {
     log.error("Unexpected error", ex);

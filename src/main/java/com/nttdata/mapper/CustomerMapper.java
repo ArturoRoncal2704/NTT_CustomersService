@@ -16,13 +16,13 @@ import java.time.ZoneOffset;
 public final class CustomerMapper {
   private CustomerMapper() {}
 
-  // ========= CREATE (POST) =========
+  // CREATE (POST)
   public static Customer toDomain(CustomerCreateRequest r) {
-    Address a = r.getAddress(); // en tu contrato Address nunca debe ser null (required)
+    Address a = r.getAddress();
     Customer c = Customer.builder()
             .id(null)
             .type(asString(r.getType()))
-            .segment(Customer.defaultSegment()) // STANDARD por regla de negocio
+            .segment(Customer.defaultSegment())
             .firstName(r.getFirstName())
             .lastName(r.getLastName())
             .businessName(r.getBusinessName())
@@ -42,7 +42,7 @@ public final class CustomerMapper {
     return c;
   }
 
-  // ========= UPDATE (PUT) =========
+  // UPDATE (PUT)
   public static void applyUpdate(Customer target, CustomerUpdateRequest r) {
     target.setType(asString(r.getType()));
     target.setSegment(asString(r.getSegment()));
@@ -68,12 +68,11 @@ public final class CustomerMapper {
     }
 
     target.setActive(r.getActive());
-    // Reglas de negocio de segmento según tipo
     target.validateSegment();
     target.refreshDisplayName();
   }
 
-  // ========= DOMAIN → API (RESPONSE) =========
+  // DOMAIN → API (RESPONSE)
   public static CustomerResponse toApi(Customer d) {
     Address addr = new Address()
             .line1(d.getAddressLine1())
@@ -101,13 +100,11 @@ public final class CustomerMapper {
 
   // ===== Helpers =====
 
-  // Enum → String (para el dominio)
   private static String asString(CustomerType e)     { return e == null ? null : e.getValue(); }
   private static String asString(CustomerSegment e)  { return e == null ? null : e.getValue(); }
   private static String asString(DocumentType e)     { return e == null ? null : e.getValue(); }
 
-  // String (del dominio) → Enum (para el response)
-  // Si tu generator NO tiene getValue()/fromValue, cambia a valueOf(s).
+
   private static CustomerType toTypeEnum(String s)        { return s == null ? null : CustomerType.fromValue(s); }
   private static CustomerSegment toSegmentEnum(String s)  { return s == null ? null : CustomerSegment.fromValue(s); }
   private static DocumentType toDocEnum(String s)         { return s == null ? null : DocumentType.fromValue(s); }

@@ -43,13 +43,12 @@ public class CustomerServiceImpl implements CustomerService {
     // Create
     @Override
     public Mono<CustomerResponse> create(CustomerCreateRequest request) {
-        // el mapper fuerza segment=STANDARD en create
         return repo.existsByDocumentTypeAndDocumentNumberAndActiveIsTrue(
                         safe(request.getDocumentType()), request.getDocumentNumber())
                 .flatMap(exists -> {
                     if (exists) return Mono.error(new ConflictException("Documento ya existe (activo)"));
                     Customer domain = CustomerMapper.toDomain(request);
-                    domain.validateSegment(); // 422 si viola reglas
+                    domain.validateSegment();
                     return repo.save(domain)
                             .map(CustomerMapper::toApi)
                             .onErrorMap(DuplicateKeyException.class,
@@ -69,8 +68,7 @@ public class CustomerServiceImpl implements CustomerService {
         return repo.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Cliente no encontrado")))
                 .flatMap(found -> {
-                    CustomerMapper.applyUpdate(found, request); // valida segmento + refreshDisplayName()
-                    // si cambió docType/docNumber y rompe índice único, lo mapeamos a 409
+                    CustomerMapper.applyUpdate(found, request);
                     return repo.save(found)
                             .map(CustomerMapper::toApi)
                             .onErrorMap(DuplicateKeyException.class,
@@ -87,7 +85,6 @@ public class CustomerServiceImpl implements CustomerService {
     // Eligibility
     @Override
     public Mono<EligibilityResponse> getEligibility(DocumentType documentType, String documentNumber) {
-        // usar FLUX para decidir 404/409/200 sin IncorrectResultSizeDataAccessException
         return repo.findAllByDocumentTypeAndDocumentNumberAndActiveIsTrue(
                         safe(documentType), documentNumber)
                 .collectList()
