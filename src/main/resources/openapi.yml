@@ -1,404 +1,385 @@
 openapi: 3.0.1
 info:
   title: Customer Service API
-  description: >
-    API reactiva para gestionar clientes y exponer elegibilidad.
-
-    Reglas clave:
-    - **POST**: `segment` no se envía; el sistema lo fuerza a `STANDARD`.
-      Si el cliente intenta forzar un segmento distinto, el backend responde **422**.
-    - **PUT**: `segment` es obligatorio y debe ser compatible:
-      VIP solo para PERSONAL; PYME solo para BUSINESS; STANDARD siempre permitido.
-  version: 1.2.0
+  version: 1.0.0
 
 servers:
   - url: http://localhost:8086
-    description: Servidor local
 
 tags:
   - name: Customers
-    description: Operaciones sobre clientes
 
 paths:
   /api/v1/customers:
     get:
-      tags: [Customers]
-      summary: Listar clientes
-      description: >
-        Si no se envían parámetros, devuelve **todos** los clientes.  
-        Si se envían `type` y/o `segment`, filtra por esos valores.
+      tags:
+        - Customers
+      summary: List customers
       operationId: listCustomers
       parameters:
-        - name: type
-          in: query
-          required: false
-          description: Filtrar por tipo de cliente
+        - in: query
+          name: type
           schema:
             $ref: '#/components/schemas/CustomerType'
-        - name: segment
-          in: query
-          required: false
-          description: Filtrar por segmento de cliente
+        - in: query
+          name: segment
           schema:
             $ref: '#/components/schemas/CustomerSegment'
       responses:
         '200':
-          description: Lista de clientes
+          description: OK
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/CustomerResponse'
-        '400':
-          description: Parámetro(s) inválido(s)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
         '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error500'
 
     post:
-      tags: [Customers]
-      summary: Crear un nuevo cliente
-      description: >
-        En la **creación**, el campo **segment** no se envía; se **fuerza** a `STANDARD`.  
-        Si el consumidor intenta enviar un segmento distinto, el backend responderá **422**.
+      tags:
+        - Customers
+      summary: Create customer
+      description: El backend forzará segment=STANDARD en creación (no enviar segment).
       operationId: createCustomer
       requestBody:
-        description: Datos del nuevo cliente
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CustomerCreateRequest'
-            examples:
-              sample:
-                value:
-                  firstName: Juan
-                  lastName: Pérez
-                  email: juan.perez@example.pe
-                  documentNumber: "45879632"
-                  type: PERSONAL
-                  phone: "+51987654321"
-                  address:
-                    line1: "Av. Arequipa 1234"
-                    city: "Lima"
-                    country: "PE"
-                  active: true
       responses:
         '201':
-          description: Cliente creado correctamente
-          headers:
-            Location:
-              description: URL del recurso creado
-              schema:
-                type: string
+          description: Created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CustomerResponse'
         '400':
-          description: Datos de la solicitud inválidos
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error400'
         '409':
-          description: Ya existe un cliente activo con ese documentNumber
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error409'
         '422':
-          description: Regla de negocio no cumplida (intentar crear con segmento distinto a STANDARD)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error422'
         '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error500'
 
   /api/v1/customers/{id}:
     get:
-      tags: [Customers]
-      summary: Obtener cliente por ID
+      tags:
+        - Customers
+      summary: Get by id
       operationId: getCustomerById
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
-          description: Identificador único del cliente
           schema:
             type: string
       responses:
         '200':
-          description: Cliente encontrado
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CustomerResponse'
         '404':
-          description: Cliente no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error404'
+        '500':
+          $ref: '#/components/responses/Error500'
 
     put:
-      tags: [Customers]
-      summary: Actualizar un cliente existente
-      description: >
-        Reglas de negocio:
-        - VIP solo para type=PERSONAL; PYME solo para type=BUSINESS.  
-        - STANDARD siempre permitido.  
-        Si no cumple, responder **422**.
+      tags:
+        - Customers
+      summary: Update customer
       operationId: updateCustomer
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
-          description: Identificador único del cliente
           schema:
             type: string
       requestBody:
-        description: Datos actualizados del cliente
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CustomerRequest'
+              $ref: '#/components/schemas/CustomerUpdateRequest'
       responses:
         '200':
-          description: Cliente actualizado correctamente
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CustomerResponse'
         '404':
-          description: Cliente no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error404'
         '409':
-          description: Conflicto por documentNumber duplicado (activo)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error409'
         '422':
-          description: Regla de negocio no cumplida (compatibilidad tipo/segmento)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
 
     delete:
-      tags: [Customers]
-      summary: Eliminar un cliente
+      tags:
+        - Customers
+      summary: Delete customer
       operationId: deleteCustomer
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
-          description: Identificador único del cliente
           schema:
             type: string
       responses:
         '204':
-          description: Cliente eliminado correctamente
+          description: No Content
         '404':
-          description: Cliente no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error404'
+        '500':
+          $ref: '#/components/responses/Error500'
 
   /api/v1/customers/eligibility:
     get:
-      tags: [Customers]
-      summary: Consultar elegibilidad por documento
-      description: >
-        Retorna el **perfil efectivo** del cliente (segmento resultante) y si posee una
-        **tarjeta de crédito activa** con el banco.  
-        Útil para validar requisitos en otros dominios (p. ej. Accounts).
+      tags:
+        - Customers
+      summary: Eligibility by document
       operationId: getEligibility
       parameters:
-        - name: documentNumber
-          in: query
+        - in: query
+          name: documentType
           required: true
-          description: Número de documento del cliente activo
+          schema:
+            $ref: '#/components/schemas/DocumentType'
+        - in: query
+          name: documentNumber
+          required: true
           schema:
             type: string
       responses:
         '200':
-          description: Elegibilidad calculada
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EligibilityResponse'
         '404':
-          description: No existe cliente activo con ese documentNumber
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error404'
         '409':
-          description: Más de un cliente activo con ese documentNumber
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Error409'
+        '500':
+          $ref: '#/components/responses/Error500'
 
 components:
   schemas:
-    # ------- Enums -------
     CustomerType:
       type: string
-      enum: [PERSONAL, BUSINESS]
-      description: Tipo de cliente
+      enum:
+        - PERSONAL
+        - BUSINESS
+
     CustomerSegment:
       type: string
-      enum: [STANDARD, VIP, PYME]
-      description: |
-        Segmento del cliente.
-        Reglas:
-        - PERSONAL: STANDARD o VIP (no PYME).
-        - BUSINESS: STANDARD o PYME (no VIP).
+      enum:
+        - STANDARD
+        - VIP
+        - PYME
 
-    # ------- Objeto compartido -------
+    DocumentType:
+      type: string
+      enum:
+        - DNI
+        - PASSPORT
+        - RUC
+        - CE
+
     Address:
       type: object
-      description: Dirección del cliente
+      required:
+        - line1
+        - city
+        - district
+        - country
       properties:
         line1:
           type: string
-          description: Dirección (calle y número)
         city:
           type: string
-          description: Ciudad
+        district:
+          type: string
         country:
           type: string
-          description: País
 
-    # ------- Request SOLO para POST (sin segment) -------
     CustomerCreateRequest:
       type: object
-      required: [firstName, lastName, documentNumber, type]
+      required:
+        - type
+        - documentType
+        - documentNumber
+        - email
+        - phone
+        - address
       properties:
-        firstName:
-          type: string
-          description: Nombres del cliente
-          maxLength: 100
-        lastName:
-          type: string
-          description: Apellidos del cliente
-          maxLength: 100
-        email:
-          type: string
-          format: email
-          description: Correo electrónico del cliente
-          nullable: true
-        documentNumber:
-          type: string
-          description: Número de documento (DNI, pasaporte, etc.)
         type:
           $ref: '#/components/schemas/CustomerType'
-        phone:
-          type: string
-          description: Teléfono del cliente
-          nullable: true
-        address:
-          allOf: [ { $ref: '#/components/schemas/Address' } ]
-          nullable: true
-        active:
-          type: boolean
-          description: Estado del cliente (activo o inactivo)
-          default: true
-
-    # ------- Request para PUT y base de Response -------
-    CustomerRequest:
-      type: object
-      required: [firstName, lastName, documentNumber, type, segment]
-      properties:
         firstName:
           type: string
-          description: Nombres del cliente
           maxLength: 100
         lastName:
           type: string
-          description: Apellidos del cliente
           maxLength: 100
+        businessName:
+          type: string
+          maxLength: 200
         email:
           type: string
           format: email
-          description: Correo electrónico del cliente
-          nullable: true
+        documentType:
+          $ref: '#/components/schemas/DocumentType'
         documentNumber:
           type: string
-          description: Número de documento (DNI, pasaporte, etc.)
+        phone:
+          type: string
+          pattern: '^\+519\d{8}$'
+        address:
+          $ref: '#/components/schemas/Address'
+        active:
+          type: boolean
+          default: true
+
+    CustomerUpdateRequest:
+      type: object
+      required:
+        - type
+        - documentType
+        - documentNumber
+        - segment
+        - email
+        - phone
+        - address
+      properties:
         type:
           $ref: '#/components/schemas/CustomerType'
         segment:
           $ref: '#/components/schemas/CustomerSegment'
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        businessName:
+          type: string
+          maxLength: 200
+        email:
+          type: string
+          format: email
+        documentType:
+          $ref: '#/components/schemas/DocumentType'
+        documentNumber:
+          type: string
         phone:
           type: string
-          description: Teléfono del cliente
-          nullable: true
+          pattern: '^\+519\d{8}$'
         address:
-          allOf: [ { $ref: '#/components/schemas/Address' } ]
-          nullable: true
+          $ref: '#/components/schemas/Address'
         active:
           type: boolean
-          description: Estado del cliente (activo o inactivo)
 
-    # ------- Response -------
     CustomerResponse:
-      allOf:
-        - $ref: '#/components/schemas/CustomerRequest'
-        - type: object
-          properties:
-            id:
-              type: string
-              description: Identificador único del cliente
-              readOnly: true
-            createdAt:
-              type: string
-              format: date-time
-              description: Fecha de creación del cliente
-              readOnly: true
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        displayName:
+          type: string
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/CustomerType'
+        segment:
+          $ref: '#/components/schemas/CustomerSegment'
+        firstName:
+          type: string
+        lastName:
+          type: string
+        businessName:
+          type: string
+        email:
+          type: string
+          format: email
+        documentType:
+          $ref: '#/components/schemas/DocumentType'
+        documentNumber:
+          type: string
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        active:
+          type: boolean
 
-    # ------- Elegibilidad -------
     EligibilityResponse:
       type: object
       properties:
         customerId:
           type: string
-          description: ID del cliente activo encontrado
         type:
           $ref: '#/components/schemas/CustomerType'
         profile:
           $ref: '#/components/schemas/CustomerSegment'
         hasActiveCreditCard:
           type: boolean
-          description: Indica si el cliente tiene una tarjeta de crédito activa con el banco
 
-    # ------- Error -------
     Problem:
       type: object
-      description: Formato de error
       properties:
-        status:  { type: integer }
-        error:   { type: string }
-        message: { type: string }
-        path:    { type: string }
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    Error400:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Error404:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Error409:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Error422:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Error500:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
