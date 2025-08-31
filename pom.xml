@@ -158,6 +158,7 @@
 					</execution>
 				</executions>
 			</plugin>
+
 <!--			CheckStyle-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
