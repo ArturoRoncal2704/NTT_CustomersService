@@ -1,11 +1,12 @@
 package com.nttdata.controller;
 
-import com.nttdata.mapper.CustomerMapper;
 import com.nttdata.model.CustomerCreateRequest;
-import com.nttdata.model.CustomerRequest;
 import com.nttdata.model.CustomerResponse;
 import com.nttdata.model.CustomerSegment;
 import com.nttdata.model.CustomerType;
+import com.nttdata.model.CustomerUpdateRequest;
+import com.nttdata.model.DocumentType;
+import com.nttdata.model.EligibilityResponse;
 import com.nttdata.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,54 +17,49 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomersApiDelegateImpl implements CustomersApiDelegate {
 
   private final CustomerService service;
 
   @Override
   public Mono<ResponseEntity<Flux<CustomerResponse>>> listCustomers(
-      CustomerType type, CustomerSegment segment, ServerWebExchange exchange) {
-
-    Flux<CustomerResponse> body = service.findAll(type, segment).map(CustomerMapper::toResponse);
-
-    return Mono.just(ResponseEntity.ok(body));
+          CustomerType type, CustomerSegment segment, ServerWebExchange exchange) {
+    return Mono.just(ResponseEntity.ok(service.list(type, segment)));
   }
 
   @Override
   public Mono<ResponseEntity<CustomerResponse>> createCustomer(
-      Mono<CustomerCreateRequest> request, ServerWebExchange exchange) {
-
-    return request
-        .map(CustomerMapper::toEntity)
-        .flatMap(service::create)
-        .map(CustomerMapper::toResponse)
-        .map(resp -> ResponseEntity.status(HttpStatus.CREATED).body(resp));
+          Mono<CustomerCreateRequest> request, ServerWebExchange exchange) {
+    return request.flatMap(service::create)
+            .map(r -> ResponseEntity.status(HttpStatus.CREATED).body(r));
   }
 
   @Override
   public Mono<ResponseEntity<CustomerResponse>> getCustomerById(
-      String id, ServerWebExchange exchange) {
-
-    return service.findById(id).map(CustomerMapper::toResponse).map(ResponseEntity::ok);
+          String id, ServerWebExchange exchange) {
+    return service.getById(id).map(ResponseEntity::ok);
   }
 
   @Override
   public Mono<ResponseEntity<CustomerResponse>> updateCustomer(
-      String id, Mono<CustomerRequest> request, ServerWebExchange exchange) {
-
-    return request
-        .map(CustomerMapper::toEntity)
-        .flatMap(c -> service.update(id, c))
-        .map(CustomerMapper::toResponse)
-        .map(ResponseEntity::ok);
+          String id, Mono<CustomerUpdateRequest> request, ServerWebExchange exchange) {
+    return request.flatMap(r -> service.update(id, r))
+            .map(ResponseEntity::ok);
   }
 
   @Override
   public Mono<ResponseEntity<Void>> deleteCustomer(String id, ServerWebExchange exchange) {
+    return service.delete(id).thenReturn(ResponseEntity.noContent().build());
+  }
 
-    return service.delete(id).thenReturn(ResponseEntity.noContent().<Void>build());
+  @Override
+  public Mono<ResponseEntity<EligibilityResponse>> getEligibility(
+          DocumentType documentType, String documentNumber, ServerWebExchange exchange) {
+    return service.getEligibility(documentType, documentNumber)
+            .map(ResponseEntity::ok);
   }
 }
+

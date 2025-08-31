@@ -9,15 +9,16 @@ import reactor.core.publisher.Mono;
 
 public interface CustomerRepository extends ReactiveMongoRepository<Customer, String> {
 
-  Mono<Boolean> existsByDocumentNumberAndActiveIsTrue(String documentNumber);
 
-  Mono<Boolean> existsByDocumentNumberAndActiveIsTrueAndIdNot(String documentNumber, String id);
 
-  Flux<Customer> findByType(CustomerType type);
 
-  Flux<Customer> findByTypeAndSegment(CustomerType type, CustomerSegment segment);
+  Flux<Customer> findAllByDocumentTypeAndDocumentNumberAndActiveIsTrue(String documentType, String documentNumber);
 
-  Mono<Customer> findFirstByDocumentNumberAndActiveIsTrue(String documentNumber);
+  // Duplicado activo por documento
+  Mono<Boolean> existsByDocumentTypeAndDocumentNumberAndActiveIsTrue(String documentType, String documentNumber);
 
-  Flux<Customer> findByDocumentNumberAndActiveIsTrue(String documentNumber);
+  // Filtros simples para listados
+  Flux<Customer> findByType(String type);
+  Flux<Customer> findBySegment(String segment);
+  Flux<Customer> findByTypeAndSegment(String type, String segment);
 }
