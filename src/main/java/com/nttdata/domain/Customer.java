@@ -3,6 +3,7 @@ package com.nttdata.domain;
 import java.time.Instant;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 
@@ -11,6 +12,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "customers")
+@CompoundIndex(
+        name = "ux_doc_active",
+        def = "{'documentType':1,'documentNumber':1,'active':1}",
+        unique = true
+)
 public class Customer {
 
   @Id

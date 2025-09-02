@@ -243,9 +243,6 @@ components:
         - type
         - documentType
         - documentNumber
-        - email
-        - phone
-        - address
       properties:
         type:
           $ref: '#/components/schemas/CustomerType'
@@ -281,9 +278,6 @@ components:
         - documentType
         - documentNumber
         - segment
-        - email
-        - phone
-        - address
       properties:
         type:
           $ref: '#/components/schemas/CustomerType'

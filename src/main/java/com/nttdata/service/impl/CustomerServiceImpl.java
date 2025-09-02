@@ -1,5 +1,6 @@
 package com.nttdata.service.impl;
 
+import com.nttdata.config.CustomerRequestValidator;
 import com.nttdata.domain.Customer;
 import com.nttdata.mapper.CustomerMapper;
 import com.nttdata.model.CustomerCreateRequest;
@@ -11,26 +12,31 @@ import com.nttdata.model.DocumentType;
 import com.nttdata.model.EligibilityResponse;
 import com.nttdata.repository.CustomerRepository;
 import com.nttdata.service.CustomerService;
+import com.nttdata.service.RequestSanitizer;
 import com.nttdata.service.errors.ConflictException;
 import com.nttdata.service.errors.NotFoundException;
+import com.nttdata.service.errors.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static com.nttdata.mapper.CustomerMapper.*;
+
 @Service
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository repo;
+    private final RequestSanitizer sanitizer;
+    private final CustomerRequestValidator validator;
 
     // List
     @Override
     public Flux<CustomerResponse> list(CustomerType type, CustomerSegment segment) {
         if (type != null && segment != null) {
-            return repo.findByType(type.getValue())
-                    .filter(c -> segment.getValue().equals(c.getSegment()))
+            return repo.findByTypeAndSegment(type.getValue(), segment.getValue())
                     .map(CustomerMapper::toApi);
         } else if (type != null) {
             return repo.findByType(type.getValue()).map(CustomerMapper::toApi);
@@ -43,18 +49,23 @@ public class CustomerServiceImpl implements CustomerService {
     // Create
     @Override
     public Mono<CustomerResponse> create(CustomerCreateRequest request) {
-        return repo.existsByDocumentTypeAndDocumentNumberAndActiveIsTrue(
-                        safe(request.getDocumentType()), request.getDocumentNumber())
+        sanitizer.sanitize(request);
+        validator.validateCreate(request);
+
+        final String docType = asString(request.getDocumentType());
+        return repo.existsByDocumentTypeAndDocumentNumberAndActiveIsTrue(docType, request.getDocumentNumber())
                 .flatMap(exists -> {
-                    if (exists) return Mono.error(new ConflictException("Documento ya existe (activo)"));
-                    Customer domain = CustomerMapper.toDomain(request);
-                    domain.validateSegment();
-                    return repo.save(domain)
-                            .map(CustomerMapper::toApi)
-                            .onErrorMap(DuplicateKeyException.class,
-                                    ex -> new ConflictException("Documento ya existe (índice único)"));
-                });
-    }
+                            if (exists) {
+                                return Mono.error(new ConflictException("Ya existe un cliente activo con ese documento"));
+                            }
+                            Customer entity = toDomain(request);
+                    return repo.save(entity)
+                            .map(CustomerMapper::toApi);
+                })
+                .onErrorMap(org.springframework.dao.DuplicateKeyException.class,
+                        ex -> new ConflictException("Documento duplicado (índice único)"));
+        }
+
     // Get
     @Override
     public Mono<CustomerResponse> getById(String id) {
@@ -68,12 +79,25 @@ public class CustomerServiceImpl implements CustomerService {
         return repo.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Cliente no encontrado")))
                 .flatMap(found -> {
-                    CustomerMapper.applyUpdate(found, request);
-                    return repo.save(found)
-                            .map(CustomerMapper::toApi)
-                            .onErrorMap(DuplicateKeyException.class,
+                    String newDocType = request.getDocumentType() != null ? asString(request.getDocumentType()) : found.getDocumentType();
+                    String newDocNum = request.getDocumentNumber() != null ? request.getDocumentNumber() : found.getDocumentNumber();
+
+                    if (request.getSegment() == null) {
+                        return Mono.error(new UnprocessableException("segment es obligatorio en PUT"));
+                    }
+                    return repo.existsByDocumentTypeAndDocumentNumberAndActiveIsTrueAndIdNot(newDocType, newDocNum, found.getId())
+                            .flatMap(dup -> {
+                                if (dup) {
+                                    return Mono.error(new ConflictException("Ya existe otro cliente activo con ese documento"));
+                                }
+                                CustomerMapper.applyUpdate(found, request);
+                                return repo.save(found)
+                                        .map(CustomerMapper::toApi);
+                            });
+                })
+                .onErrorMap(DuplicateKeyException.class,
                                     ex -> new ConflictException("Documento ya existe (índice único)"));
-                });
+
     }
     // Delete
     @Override
@@ -86,7 +110,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Mono<EligibilityResponse> getEligibility(DocumentType documentType, String documentNumber) {
         return repo.findAllByDocumentTypeAndDocumentNumberAndActiveIsTrue(
-                        safe(documentType), documentNumber)
+                        CustomerMapper.asString(documentType), documentNumber)
                 .collectList()
                 .flatMap(list -> {
                     if (list.isEmpty()) {
@@ -95,14 +119,7 @@ public class CustomerServiceImpl implements CustomerService {
                     if (list.size() > 1) {
                         return Mono.error(new ConflictException("Más de un cliente activo con el mismo documento"));
                     }
-                    Customer c = list.get(0);
-                    EligibilityResponse resp = new EligibilityResponse()
-                            .customerId(c.getId())
-                            .type(toTypeEnum(c.getType()))
-                            .profile(toSegmentEnum(c.getSegment()))
-                            // TODO: integrar con créditos / cards
-                            .hasActiveCreditCard(false);
-                    return Mono.just(resp);
+                    return Mono.just(CustomerMapper.toEligibility(list.get(0)));
                 });
     }
 
@@ -113,16 +130,5 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(CustomerMapper::toApi);
     }
 
-    // Helpers
-    private static String safe(DocumentType d) {
-        return d == null ? null : d.getValue();
-    }
 
-    private static com.nttdata.model.CustomerType toTypeEnum(String s) {
-        return s == null ? null : com.nttdata.model.CustomerType.fromValue(s);
-    }
-
-    private static com.nttdata.model.CustomerSegment toSegmentEnum(String s) {
-        return s == null ? null : com.nttdata.model.CustomerSegment.fromValue(s);
-    }
 }

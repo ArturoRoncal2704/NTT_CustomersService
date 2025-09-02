@@ -1,13 +1,7 @@
 package com.nttdata.mapper;
 
 import com.nttdata.domain.Customer;
-import com.nttdata.model.Address;
-import com.nttdata.model.CustomerCreateRequest;
-import com.nttdata.model.CustomerResponse;
-import com.nttdata.model.CustomerSegment;
-import com.nttdata.model.CustomerType;
-import com.nttdata.model.CustomerUpdateRequest;
-import com.nttdata.model.DocumentType;
+import com.nttdata.model.*;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -98,14 +92,21 @@ public final class CustomerMapper {
     return resp;
   }
 
+  public static EligibilityResponse toEligibility(Customer d) {
+    return new EligibilityResponse()
+            .customerId(d.getId())
+            .type(toTypeEnum(d.getType()))
+            .profile(toSegmentEnum(d.getSegment()))
+            .hasActiveCreditCard(false);
+  }
+
   // ===== Helpers =====
 
-  private static String asString(CustomerType e)     { return e == null ? null : e.getValue(); }
-  private static String asString(CustomerSegment e)  { return e == null ? null : e.getValue(); }
-  private static String asString(DocumentType e)     { return e == null ? null : e.getValue(); }
+  public static String asString(CustomerType e)     { return e == null ? null : e.getValue(); }
+  public static String asString(CustomerSegment e)  { return e == null ? null : e.getValue(); }
+  public static String asString(DocumentType e)     { return e == null ? null : e.getValue(); }
 
-
-  private static CustomerType toTypeEnum(String s)        { return s == null ? null : CustomerType.fromValue(s); }
-  private static CustomerSegment toSegmentEnum(String s)  { return s == null ? null : CustomerSegment.fromValue(s); }
-  private static DocumentType toDocEnum(String s)         { return s == null ? null : DocumentType.fromValue(s); }
+  public static CustomerType toTypeEnum(String s)        { return s == null ? null : CustomerType.fromValue(s); }
+  public static CustomerSegment toSegmentEnum(String s)  { return s == null ? null : CustomerSegment.fromValue(s); }
+  public static DocumentType toDocEnum(String s)         { return s == null ? null : DocumentType.fromValue(s); }
 }

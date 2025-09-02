@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.nttdata.service.errors.ConflictException;
 import com.nttdata.service.errors.NotFoundException;
 import com.nttdata.service.errors.UnprocessableException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.core.codec.DecodingException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -77,5 +79,17 @@ public class ApiExceptionHandler {
     String msg = ex.getClass().getSimpleName() + (ex.getMessage() != null ? (": " + ex.getMessage()) : "");
     return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(problem(500,"Internal Server Error", msg, exg.getRequest().getPath().value())));
+  }
+
+  @ExceptionHandler(DecodingException.class)
+  public Mono<ResponseEntity<String>> handleDecoding(DecodingException ex) {
+    Throwable cause = ex.getCause();
+    if (cause instanceof UnrecognizedPropertyException) {
+      String campo = ((UnrecognizedPropertyException) cause).getPropertyName();
+      return Mono.just(ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+              .body("Campo no permitido: " + campo));
+    }
+    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body("Payload inválido"));
   }
 }
