@@ -61,5 +61,12 @@ public class CustomersApiDelegateImpl implements CustomersApiDelegate {
     return service.getEligibility(documentType, documentNumber)
             .map(ResponseEntity::ok);
   }
+
+  @Override
+  public Mono<ResponseEntity<CustomerResponse>> getCustomerByDocumentNumber(
+          String documentNumber, ServerWebExchange exchange) {
+    return service.getByDocumentNumber(documentNumber)
+            .map(ResponseEntity::ok);
+  }
 }
 

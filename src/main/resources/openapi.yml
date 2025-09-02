@@ -172,6 +172,31 @@ paths:
         '500':
           $ref: '#/components/responses/Error500'
 
+  /api/v1/customers/document/{number}:
+    get:
+      tags:
+        - Customers
+      summary: Get customer by documentNumber
+      operationId: getCustomerByDocumentNumber
+      parameters:
+        - in: path
+          name: number
+          required: true
+          description: Customer documentNumber
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '500':
+          $ref: '#/components/responses/Error500'
+
 components:
   schemas:
     CustomerType:

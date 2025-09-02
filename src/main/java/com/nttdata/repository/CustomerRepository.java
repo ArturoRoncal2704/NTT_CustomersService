@@ -9,7 +9,7 @@ public interface CustomerRepository extends ReactiveMongoRepository<Customer, St
 
 
 
-
+  Mono<Customer> findByDocumentNumberAndActiveIsTrue(String documentNumber);
   Flux<Customer> findAllByDocumentTypeAndDocumentNumberAndActiveIsTrue(String documentType, String documentNumber);
   Mono<Boolean> existsByDocumentTypeAndDocumentNumberAndActiveIsTrue(String documentType, String documentNumber);
   Flux<Customer> findByType(String type);

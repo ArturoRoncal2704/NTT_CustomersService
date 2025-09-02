@@ -105,6 +105,14 @@ public class CustomerServiceImpl implements CustomerService {
                     return Mono.just(resp);
                 });
     }
+
+    @Override
+    public Mono<CustomerResponse> getByDocumentNumber(String documentNumber) {
+        return repo.findByDocumentNumberAndActiveIsTrue(documentNumber)
+                .switchIfEmpty(Mono.error(new NotFoundException("Cliente no encontrado")))
+                .map(CustomerMapper::toApi);
+    }
+
     // Helpers
     private static String safe(DocumentType d) {
         return d == null ? null : d.getValue();

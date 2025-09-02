@@ -18,4 +18,5 @@ public interface CustomerService {
 
   // Elegibilidad por documento
   Mono<EligibilityResponse> getEligibility(DocumentType documentType, String documentNumber);
+  Mono<CustomerResponse> getByDocumentNumber(String documentNumber);
 }
