@@ -26,9 +26,15 @@ public class CustomersApiDelegateImpl implements CustomersApiDelegate {
 
   @Override
   public Mono<ResponseEntity<Flux<CustomerResponse>>> listCustomers(
-          CustomerType type, CustomerSegment segment, ServerWebExchange exchange) {
-    return Mono.just(ResponseEntity.ok(service.list(type, segment)));
-  }
+          CustomerType type,
+          CustomerSegment segment,
+          Integer page,
+          Integer size,
+          String sort,
+          String direction,
+          ServerWebExchange exchange) {
+    Flux<CustomerResponse> body = service.list(type, segment, page, size, sort, direction);
+    return Mono.just(ResponseEntity.ok(body));  }
 
   @Override
   public Mono<ResponseEntity<CustomerResponse>> createCustomer(

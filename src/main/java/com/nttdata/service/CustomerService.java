@@ -7,8 +7,12 @@ import reactor.core.publisher.Mono;
 
 public interface CustomerService {
 
-  Flux<CustomerResponse> list(CustomerType type, CustomerSegment segment);
-  Mono<CustomerResponse> create(CustomerCreateRequest request);
+  Flux<CustomerResponse> list(CustomerType type,
+                              CustomerSegment segment,
+                              Integer page,
+                              Integer size,
+                              String sort,
+                              String direction);  Mono<CustomerResponse> create(CustomerCreateRequest request);
   Mono<CustomerResponse> getById(String id);
   Mono<CustomerResponse> update(String id, CustomerUpdateRequest request);
   Mono<Void> delete(String id);

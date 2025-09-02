@@ -13,11 +13,13 @@ import com.nttdata.model.EligibilityResponse;
 import com.nttdata.repository.CustomerRepository;
 import com.nttdata.service.CustomerService;
 import com.nttdata.service.RequestSanitizer;
+import com.nttdata.service.SortingUtil;
 import com.nttdata.service.errors.ConflictException;
 import com.nttdata.service.errors.NotFoundException;
 import com.nttdata.service.errors.UnprocessableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -34,17 +36,34 @@ public class CustomerServiceImpl implements CustomerService {
 
     // List
     @Override
-    public Flux<CustomerResponse> list(CustomerType type, CustomerSegment segment) {
+    public Flux<CustomerResponse> list(CustomerType type,
+                                       CustomerSegment segment,
+                                       Integer page,
+                                       Integer size,
+                                       String sort,
+                                       String direction) {
+
+        int p = (page == null || page < 0) ? 0 : page.intValue();
+        int s = (size == null) ? 20 : Math.max(1, Math.min(size.intValue(), 100));
+
+        SortingUtil.Spec spec = SortingUtil.parse(sort, direction);
+        Sort springSort = Sort.by(spec.direction , spec.property);
+
+        Flux<Customer> flux;
         if (type != null && segment != null) {
-            return repo.findByTypeAndSegment(type.getValue(), segment.getValue())
-                    .map(CustomerMapper::toApi);
+            flux = repo.findByTypeAndSegment(type.getValue(), segment.getValue(), springSort);
         } else if (type != null) {
-            return repo.findByType(type.getValue()).map(CustomerMapper::toApi);
+            flux = repo.findByType(type.getValue(), springSort);
         } else if (segment != null) {
-            return repo.findBySegment(segment.getValue()).map(CustomerMapper::toApi);
+            flux = repo.findBySegment(segment.getValue(), springSort);
         } else {
-            return repo.findAll().map(CustomerMapper::toApi);
+            flux = repo.findAll(springSort);
         }
+        long skip = (long) p * s;
+        return flux
+                .skip(skip)
+                .take(s)
+                .map(CustomerMapper::toApi);
     }
     // Create
     @Override

@@ -17,7 +17,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<lombok.version>1.18.32</lombok.version>
-		<openapi.generator.version>5.1.0</openapi.generator.version>
+		<openapi.generator.version>6.6.0</openapi.generator.version>
 		<spring-cloud.version>2021.0.8</spring-cloud.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<checkstyle.version>10.26.1</checkstyle.version>
@@ -69,20 +69,13 @@
 			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
-
-		<!-- Spring fox -->
+		<!-- Springdoc -->
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-			<version>3.0.0</version>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-webflux-ui</artifactId>
+			<version>1.8.0</version>
 		</dependency>
 
-		<!-- Spring fox-Swagger UI-->
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-boot-starter</artifactId>
-			<version>3.0.0</version>
-		</dependency>
 		<!-- Soporte para openapitools -->
 		<dependency>
 			<groupId>org.openapitools</groupId>
@@ -140,9 +133,9 @@
 				<version>${openapi.generator.version}</version>
 				<executions>
 					<execution>
-						<goals>
-							<goal>generate</goal>
-						</goals>
+						<id>generate-openapi</id>
+						<phase>generate-sources</phase>
+						<goals><goal>generate</goal></goals>
 						<configuration>
 							<inputSpec>${project.basedir}/src/main/resources/openapi.yml</inputSpec>
 							<generatorName>spring</generatorName>
@@ -153,6 +146,8 @@
 								<delegatePattern>true</delegatePattern>
 								<reactive>true</reactive>
 								<useTags>true</useTags>
+								<useSwaggerAnnotations>false</useSwaggerAnnotations>
+								<useSpringfox>false</useSpringfox>
 							</configOptions>
 						</configuration>
 					</execution>
