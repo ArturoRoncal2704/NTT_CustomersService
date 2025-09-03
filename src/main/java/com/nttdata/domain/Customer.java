@@ -12,11 +12,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "customers")
-@CompoundIndex(
-        name = "ux_doc_active",
-        def = "{'documentType':1,'documentNumber':1,'active':1}",
-        unique = true
-)
 public class Customer {
 
   @Id
@@ -41,6 +36,7 @@ public class Customer {
   private Boolean active;
 
   private Instant createdAt;
+  private Instant deletedAt;
 
   private String displayName;
 

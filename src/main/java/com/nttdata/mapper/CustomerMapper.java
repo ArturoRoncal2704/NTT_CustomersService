@@ -77,6 +77,7 @@ public final class CustomerMapper {
     CustomerResponse resp = new CustomerResponse();
     resp.setId(d.getId());
     resp.setCreatedAt(d.getCreatedAt() == null ? null : d.getCreatedAt().atOffset(ZoneOffset.UTC));
+    resp.setDeletedAt(d.getDeletedAt() == null ? null : d.getDeletedAt().atOffset(ZoneOffset.UTC));
     resp.setDisplayName(d.getDisplayName());
     resp.setType(toTypeEnum(d.getType()));
     resp.setSegment(toSegmentEnum(d.getSegment()));

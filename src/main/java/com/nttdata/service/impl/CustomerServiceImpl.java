@@ -24,6 +24,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+
 import static com.nttdata.mapper.CustomerMapper.*;
 
 @Service
@@ -123,7 +125,14 @@ public class CustomerServiceImpl implements CustomerService {
     public Mono<Void> delete(String id) {
         return repo.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Cliente no encontrado")))
-                .flatMap(repo::delete);
+                .flatMap(c -> {
+                    if (Boolean.FALSE.equals(c.getActive())){
+                        return Mono.empty();
+                    }
+                    c.setActive(false);
+                    c.setDeletedAt(Instant.now());
+                    return repo.save(c).then();
+                });
     }
     // Eligibility
     @Override

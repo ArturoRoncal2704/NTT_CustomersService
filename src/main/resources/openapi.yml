@@ -364,6 +364,10 @@ components:
           $ref: '#/components/schemas/Address'
         active:
           type: boolean
+        deletedAt:
+          type: string
+          format: date-time
+          readOnly: true
 
     EligibilityResponse:
       type: object
