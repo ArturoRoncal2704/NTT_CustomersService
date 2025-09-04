@@ -1,6 +1,9 @@
 package com.nttdata.domain;
 
 import java.time.Instant;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -40,13 +43,8 @@ public class Customer {
 
   private String displayName;
 
-  public void refreshDisplayName() {
-    if ("PERSONAL".equals(type)) {
-      this.displayName =
-              (firstName == null ? "" : firstName) + " " + (lastName == null ? "" : lastName);
-    } else {
-      this.displayName = businessName;
-    }
+  public static String defaultSegment() {
+    return "STANDARD";
   }
 
   public void validateSegment() {
@@ -58,7 +56,12 @@ public class Customer {
     }
   }
 
-  public static String defaultSegment() {
-    return "STANDARD";
+  public void refreshDisplayName() {
+   String name = Stream.of(getFirstName(),getLastName(),getBusinessName())
+           .filter( s -> s != null && !s.isBlank())
+           .collect(Collectors.joining(" "));
+   setDisplayName(name.isBlank() ? null : name);
   }
+
+
 }

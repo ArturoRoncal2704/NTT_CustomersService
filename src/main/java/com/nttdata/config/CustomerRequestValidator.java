@@ -9,9 +9,6 @@ import org.springframework.util.StringUtils;
 @Component
 public class CustomerRequestValidator {
 
-    private static final String RE_DNI = "^\\d{8}$";
-    private static final String RE_RUC = "^\\d{11}$";
-    private static final String RE_CE  = "^[A-Za-z0-9-]{9,12}$";
 
     public void validateCreate(CustomerCreateRequest r) {
         if (r == null) {
@@ -55,4 +52,7 @@ public class CustomerRequestValidator {
         String s = v.trim();
         return !s.isEmpty() && s.length() >= min && s.length() <= max;
     }
+    private static final String RE_DNI = "^\\d{8}$";
+    private static final String RE_RUC = "^\\d{11}$";
+    private static final String RE_CE  = "^[A-Za-z0-9-]{9,12}$";
 }
